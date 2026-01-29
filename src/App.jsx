@@ -11,7 +11,7 @@ import logo from './assets/logo.svg';
 
 import './App.css';
 
-// Sample URLs for testing
+// Sample URLs for testing (CORS-enabled sources)
 const SAMPLE_URLS = [
   {
     label: 'Big Buck Bunny (MP4)',
@@ -24,8 +24,8 @@ const SAMPLE_URLS = [
     type: 'hls',
   },
   {
-    label: 'Tears of Steel (DASH)',
-    url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+    label: 'Sintel (DASH)',
+    url: 'https://storage.googleapis.com/shaka-demo-assets/sintel/dash.mpd',
     type: 'dash',
   },
 ];
@@ -38,6 +38,7 @@ function PlayerDemo() {
   const [playbackInfo, setPlaybackInfo] = useState({ currentTime: 0, duration: 0 });
   const [status, setStatus] = useState('idle');
   const playerRef = useRef(null);
+  const resumePromptedRef = useRef(null); // Track which URL we've prompted for
 
   const { savePosition, getSavedPosition } = usePlayer();
 
@@ -59,11 +60,11 @@ function PlayerDemo() {
   const handleReady = useCallback(({ player, video }) => {
     setStatus('ready');
 
-    // Check for saved position
-    if (activeUrl) {
+    // Check for saved position (only prompt once per URL, and only if > 5 seconds)
+    if (activeUrl && resumePromptedRef.current !== activeUrl) {
       const savedPos = getSavedPosition(activeUrl);
-      if (savedPos > 0 && video) {
-        // Ask user if they want to resume
+      if (savedPos > 5 && video) {
+        resumePromptedRef.current = activeUrl; // Mark as prompted
         const resume = window.confirm(
           `Resume from ${formatTime(savedPos)}?`
         );
