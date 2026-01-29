@@ -110,6 +110,56 @@ const url = URL.createObjectURL(blob);
 
 ---
 
+## Using the ES module build in another Vite project ⚙️
+
+The library ships an ES module build at `dist/m3u-player.es.js` and the package's `module` field points to this file, so modern bundlers (Vite, Rollup, webpack with ESM) will pick it automatically.
+
+Examples
+
+1) Vite + React (recommended)
+
+```js
+// src/App.jsx
+import 'm3u-player/style.css';
+import { UniversalPlayer } from 'm3u-player';
+
+export default function App() {
+  return <UniversalPlayer url="https://example.com/video.m3u8" />;
+}
+```
+
+2) Direct ESM import from a CDN (for experimentation)
+
+```html
+<script type="module">
+  import { UniversalPlayer } from 'https://unpkg.com/m3u-player@0.1.0/dist/m3u-player.es.js';
+  // You must also provide React/ReactDOM (e.g., via CDN ESM) and any required polyfills
+</script>
+```
+
+Tips & troubleshooting
+
+- CSS: import `m3u-player/style.css` in your app to include the packaged styles.
+- Duplicate React / Hooks errors: if you see errors about multiple copies of React, make sure your app and `m3u-player` resolve the same React instance. A simple fix in Vite is to add an alias that dedupes React:
+
+```js
+// vite.config.js
+import { resolve } from 'path';
+export default {
+  resolve: {
+    alias: {
+      react: resolve(__dirname, 'node_modules/react'),
+      'react-dom': resolve(__dirname, 'node_modules/react-dom'),
+    },
+  },
+};
+```
+
+- @ffmpeg assets: FFmpeg core WASM files are loaded from a CDN by default (`RemuxerService`). For private networks or offline use, host the core files locally and update `RemuxerService` to point to your hosted files.
+- Need an alternate bundle without React included? Open an issue or PR — we can provide an additional build variant that treats `react`/`react-dom` as externals.
+
+---
+
 ## Development
 
 Clone the repository and install dependencies:
