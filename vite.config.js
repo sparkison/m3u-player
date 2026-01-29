@@ -41,9 +41,11 @@ export default defineConfig({
   // Development server configuration
   server: {
     port: 5173,
-    // Required for ffmpeg.wasm multi-threading (SharedArrayBuffer)
+    // Use 'credentialless' for COEP - more permissive than 'require-corp'
+    // Still enables SharedArrayBuffer for FFmpeg.wasm multi-threading
+    // but allows cross-origin resources without CORP headers (Chrome 96+)
     headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
   },
@@ -52,7 +54,7 @@ export default defineConfig({
   preview: {
     port: 4173,
     headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
   },

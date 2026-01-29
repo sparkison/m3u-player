@@ -3,18 +3,29 @@
  * Handles playback of HLS, DASH, MP4, MKV, AVI, and MPEG-TS streams
  *
  * Strategy:
- * - HLS/DASH/MP4/WebM: Direct Shaka Player
- * - MPEG-TS Live: Shaka with proper config or native
- * - MKV/AVI: FFmpeg remux to fMP4, then Shaka
+ * - MP4/WebM: Native HTML5 video (avoids COEP issues with cross-origin)
+ * - HLS/DASH: Shaka Player (needed for adaptive streaming)
+ * - MPEG-TS Live: Shaka with proper config
+ * - MKV/AVI: FFmpeg remux to fMP4, then native playback
  */
 
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import shaka from 'shaka-player';
-import { detectStreamType, StreamCategory, needsRemuxing, getExtension } from '../utils/streamDetector';
+import { detectStreamType, StreamType, StreamCategory, needsRemuxing, getExtension } from '../utils/streamDetector';
 import { remuxer } from '../services/RemuxerService';
 
 // Install Shaka polyfills
 shaka.polyfill.installAll();
+
+/**
+ * Determine if we should use native HTML5 video instead of Shaka
+ * Native video avoids COEP issues with cross-origin resources
+ */
+function shouldUseNativePlayer(type) {
+  // Use native player for simple container formats
+  // Shaka is only needed for adaptive streaming (HLS/DASH)
+  return [StreamType.MP4, StreamType.WEBM].includes(type);
+}
 
 const UniversalPlayer = forwardRef(function UniversalPlayer({
   url,
@@ -85,7 +96,54 @@ const UniversalPlayer = forwardRef(function UniversalPlayer({
     }
   }, []);
 
-  // Initialize player for native Shaka formats
+  // Initialize native HTML5 video player (for MP4, WebM)
+  // This avoids COEP issues with cross-origin resources
+  const initNativePlayer = useCallback(async (mediaUrl) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    return new Promise((resolve, reject) => {
+      const handleCanPlay = () => {
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
+
+        setStatus('ready');
+
+        // Get stream info from video element
+        const info = {
+          width: video.videoWidth,
+          height: video.videoHeight,
+          videoCodec: 'native',
+          audioCodec: 'native',
+        };
+        setStreamInfo(info);
+        onStreamInfo?.(info);
+        onReady?.({ player: null, video });
+
+        if (autoPlay) {
+          video.play().catch(e => console.warn('Autoplay blocked:', e));
+        }
+
+        resolve();
+      };
+
+      const handleError = () => {
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
+        reject(new Error('Failed to load media'));
+      };
+
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
+
+      // Set crossOrigin to anonymous for CORS
+      video.crossOrigin = 'anonymous';
+      video.src = mediaUrl;
+      video.load();
+    });
+  }, [autoPlay, onReady, onStreamInfo]);
+
+  // Initialize player for adaptive streaming (HLS/DASH)
   const initShakaPlayer = useCallback(async (mediaUrl, isLive = false) => {
     const video = videoRef.current;
     if (!video) return;
@@ -186,15 +244,15 @@ const UniversalPlayer = forwardRef(function UniversalPlayer({
       const blobUrl = URL.createObjectURL(blob);
       objectUrlRef.current = blobUrl;
 
-      // Now load with Shaka (fMP4 is natively supported)
-      await initShakaPlayer(blobUrl, false);
+      // Use native player for the remuxed blob (no COEP issues with blob URLs)
+      await initNativePlayer(blobUrl);
     } catch (e) {
       console.error('Remux error:', e);
       setError(`Remux failed: ${e.message}`);
       setStatus('error');
       onError?.(e);
     }
-  }, [initShakaPlayer, onRemuxProgress, onError]);
+  }, [initNativePlayer, onRemuxProgress, onError]);
 
   // Main initialization effect
   useEffect(() => {
@@ -219,8 +277,13 @@ const UniversalPlayer = forwardRef(function UniversalPlayer({
         if (needsRemuxing(type)) {
           // MKV, AVI, etc - need FFmpeg remuxing
           await initRemuxedPlayer(url, ext || type);
+        } else if (shouldUseNativePlayer(type)) {
+          // MP4, WebM - use native HTML5 video (avoids COEP issues)
+          console.log('Using native player for:', type);
+          await initNativePlayer(url);
         } else {
-          // HLS, DASH, MP4, WebM, TS - Shaka can handle
+          // HLS, DASH, TS - need Shaka for adaptive streaming
+          console.log('Using Shaka player for:', type);
           await initShakaPlayer(url, isLive);
         }
       } catch (e) {
@@ -236,7 +299,7 @@ const UniversalPlayer = forwardRef(function UniversalPlayer({
     return () => {
       cleanup();
     };
-  }, [url, cleanup, initShakaPlayer, initRemuxedPlayer, onError]);
+  }, [url, cleanup, initNativePlayer, initShakaPlayer, initRemuxedPlayer, onError]);
 
   // Video event handlers
   const handlePlay = useCallback(() => {
