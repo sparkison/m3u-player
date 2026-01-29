@@ -74,7 +74,7 @@
 
 .url-input:focus {
   border-color: #615fff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(97, 95, 255, 0.2);
 }
 
 .url-input::placeholder {
@@ -118,17 +118,17 @@
 .sample-button {
   padding: 0.4rem 0.75rem;
   font-size: 0.8rem;
-  color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #7c86ff;
+  background: rgba(97, 95, 255, 0.15);
+  border: 1px solid rgba(97, 95, 255, 0.3);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .sample-button:hover {
-  background: rgba(99, 102, 241, 0.25);
-  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(97, 95, 255, 0.25);
+  border-color: rgba(97, 95, 255, 0.5);
 }
 
 /* Player Section */
@@ -151,7 +151,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  background: linear-gradient(135deg, #030712 0%, #101828 100%);
 }
 
 .placeholder-content {
