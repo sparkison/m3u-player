@@ -19,6 +19,11 @@ const SAMPLE_URLS = [
     type: 'mp4',
   },
   {
+    label: 'Big Buck Bunny (MKV)',
+    url: 'https://test-videos.co.uk/vids/bigbuckbunny/mkv/1080/Big_Buck_Bunny_1080_10s_30MB.mkv',
+    type: 'mkv',
+  },
+  {
     label: 'Sintel (HLS)',
     url: 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
     type: 'hls',
