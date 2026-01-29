@@ -4,7 +4,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #101828 0%, #030712 100%);
   color: #e5e5e5;
 }
 
@@ -86,7 +86,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: #fff;
-  background: #6366f1;
+  background: #efb100;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -94,7 +94,7 @@
 }
 
 .load-button:hover {
-  background: #4f46e5;
+  background: #fb2c36;
 }
 
 .load-button:active {
