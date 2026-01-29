@@ -73,7 +73,7 @@
 }
 
 .url-input:focus {
-  border-color: #6366f1;
+  border-color: #615fff;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
@@ -86,7 +86,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: #fff;
-  background: #efb100;
+  background: #fb2c36;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -94,7 +94,7 @@
 }
 
 .load-button:hover {
-  background: #fb2c36;
+  background: #c10007;
 }
 
 .load-button:active {
