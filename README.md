@@ -1,4 +1,4 @@
-# m3u editor
+# m3u player
 
 ![logo](./public/favicon.png)
 
