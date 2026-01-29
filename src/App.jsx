@@ -1,35 +1,255 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+/**
+ * Demo App for UniversalPlayer
+ * Standalone testing interface with URL input
+ */
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useState, useRef, useCallback } from 'react';
+import UniversalPlayer from './components/UniversalPlayer';
+import { PlayerProvider, usePlayer } from './context/PlayerContext';
+import { detectStreamType, StreamType } from './utils/streamDetector';
+import './App.css';
+
+// Sample URLs for testing
+const SAMPLE_URLS = [
+  {
+    label: 'Big Buck Bunny (MP4)',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    type: 'mp4',
+  },
+  {
+    label: 'Sintel (HLS)',
+    url: 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
+    type: 'hls',
+  },
+  {
+    label: 'Tears of Steel (DASH)',
+    url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+    type: 'dash',
+  },
+];
+
+function PlayerDemo() {
+  const [url, setUrl] = useState('');
+  const [activeUrl, setActiveUrl] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [streamInfo, setStreamInfo] = useState(null);
+  const [playbackInfo, setPlaybackInfo] = useState({ currentTime: 0, duration: 0 });
+  const [status, setStatus] = useState('idle');
+  const playerRef = useRef(null);
+
+  const { savePosition, getSavedPosition } = usePlayer();
+
+  const handleLoad = useCallback(() => {
+    if (inputValue.trim()) {
+      setActiveUrl(inputValue.trim());
+      setUrl(inputValue.trim());
+      setStatus('loading');
+    }
+  }, [inputValue]);
+
+  const handleSampleClick = useCallback((sampleUrl) => {
+    setInputValue(sampleUrl);
+    setActiveUrl(sampleUrl);
+    setUrl(sampleUrl);
+    setStatus('loading');
+  }, []);
+
+  const handleReady = useCallback(({ player, video }) => {
+    setStatus('ready');
+
+    // Check for saved position
+    if (activeUrl) {
+      const savedPos = getSavedPosition(activeUrl);
+      if (savedPos > 0 && video) {
+        // Ask user if they want to resume
+        const resume = window.confirm(
+          `Resume from ${formatTime(savedPos)}?`
+        );
+        if (resume) {
+          video.currentTime = savedPos;
+        }
+      }
+    }
+  }, [activeUrl, getSavedPosition]);
+
+  const handleTimeUpdate = useCallback(({ currentTime, duration }) => {
+    setPlaybackInfo({ currentTime, duration });
+
+    // Save position every 5 seconds
+    if (activeUrl && currentTime > 0 && Math.floor(currentTime) % 5 === 0) {
+      savePosition(activeUrl, currentTime);
+    }
+  }, [activeUrl, savePosition]);
+
+  const handleStreamInfo = useCallback((info) => {
+    setStreamInfo(info);
+  }, []);
+
+  const handleError = useCallback((error) => {
+    setStatus('error');
+    console.error('Player error:', error);
+  }, []);
+
+  const handlePlay = useCallback(() => setStatus('playing'), []);
+  const handlePause = useCallback(() => setStatus('paused'), []);
+
+  // Detect stream type for display
+  const detectedType = url ? detectStreamType(url) : null;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="demo-container">
+      <header className="demo-header">
+        <h1>Universal Media Player</h1>
+        <p>Supports HLS, DASH, MP4, MKV, AVI, and MPEG-TS streams</p>
+      </header>
+
+      <div className="demo-content">
+        {/* URL Input Section */}
+        <div className="url-input-section">
+          <div className="input-group">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLoad()}
+              placeholder="Enter stream URL (HLS, DASH, MP4, MKV, AVI, TS...)"
+              className="url-input"
+            />
+            <button onClick={handleLoad} className="load-button">
+              Load
+            </button>
+          </div>
+
+          {/* Sample URLs */}
+          <div className="sample-urls">
+            <span className="sample-label">Try:</span>
+            {SAMPLE_URLS.map((sample, i) => (
+              <button
+                key={i}
+                onClick={() => handleSampleClick(sample.url)}
+                className="sample-button"
+              >
+                {sample.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Player Section */}
+        <div className="player-section">
+          {url ? (
+            <UniversalPlayer
+              ref={playerRef}
+              url={url}
+              autoPlay
+              controls
+              onReady={handleReady}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onTimeUpdate={handleTimeUpdate}
+              onStreamInfo={handleStreamInfo}
+              onError={handleError}
+              className="demo-player"
+            />
+          ) : (
+            <div className="player-placeholder">
+              <div className="placeholder-content">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <p>Enter a URL above to start playing</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Info Panel */}
+        {url && (
+          <div className="info-panel">
+            <div className="info-section">
+              <h3>Stream Info</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">Status</span>
+                  <span className={`info-value status-${status}`}>{status}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Type</span>
+                  <span className="info-value">
+                    {detectedType?.type || 'unknown'}
+                    {detectedType?.category === 'live' && ' (Live)'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Time</span>
+                  <span className="info-value">
+                    {formatTime(playbackInfo.currentTime)} / {formatTime(playbackInfo.duration)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {streamInfo && (
+              <div className="info-section">
+                <h3>Media Details</h3>
+                <div className="info-grid">
+                  {streamInfo.width && streamInfo.height && (
+                    <div className="info-item">
+                      <span className="info-label">Resolution</span>
+                      <span className="info-value">{streamInfo.width}x{streamInfo.height}</span>
+                    </div>
+                  )}
+                  {streamInfo.videoCodec && (
+                    <div className="info-item">
+                      <span className="info-label">Video Codec</span>
+                      <span className="info-value">{streamInfo.videoCodec}</span>
+                    </div>
+                  )}
+                  {streamInfo.audioCodec && (
+                    <div className="info-item">
+                      <span className="info-label">Audio Codec</span>
+                      <span className="info-value">{streamInfo.audioCodec}</span>
+                    </div>
+                  )}
+                  {streamInfo.bandwidth && (
+                    <div className="info-item">
+                      <span className="info-label">Bitrate</span>
+                      <span className="info-value">{Math.round(streamInfo.bandwidth / 1000)} kbps</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+
+      <footer className="demo-footer">
         <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
+          Built with React, Shaka Player, and FFmpeg.wasm
         </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      </footer>
+    </div>
+  );
 }
 
-export default App
+function formatTime(seconds) {
+  if (!seconds || !isFinite(seconds)) return '0:00';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function App() {
+  return (
+    <PlayerProvider>
+      <PlayerDemo />
+    </PlayerProvider>
+  );
+}
+
+export default App;

@@ -1,13 +1,28 @@
 {
   "name": "m3u-player",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Universal media player with FFmpeg remuxing support for HLS, DASH, MP4, MKV, AVI, and MPEG-TS",
   "type": "module",
+  "main": "./dist/m3u-player.umd.js",
+  "module": "./dist/m3u-player.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/m3u-player.es.js",
+      "require": "./dist/m3u-player.umd.js"
+    },
+    "./style.css": "./dist/m3u-player.css"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "build": "BUILD_MODE=lib vite build",
+    "build:demo": "vite build",
+    "build:all": "npm run build && npm run build:demo",
+    "preview": "vite preview",
+    "preview:demo": "vite preview --outDir dist-demo",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -26,5 +41,33 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "vite": "^7.2.4"
-  }
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "video-player",
+    "media-player",
+    "hls",
+    "dash",
+    "ffmpeg",
+    "remux",
+    "shaka-player",
+    "streaming",
+    "mkv",
+    "avi",
+    "m3u8",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT"
 }
