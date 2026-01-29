@@ -7,6 +7,8 @@ import { useState, useRef, useCallback } from 'react';
 import UniversalPlayer from './components/UniversalPlayer';
 import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { detectStreamType, StreamType } from './utils/streamDetector';
+import logo from './assets/logo.svg';
+
 import './App.css';
 
 // Sample URLs for testing
@@ -99,7 +101,10 @@ function PlayerDemo() {
   return (
     <div className="demo-container">
       <header className="demo-header">
-        <h1>Universal Media Player</h1>
+        <div className="header-title">
+          <img src={logo} alt="M3U Player" className="header-logo" />
+          <h1>M3U Player</h1>
+        </div>
         <p>Supports HLS, DASH, MP4, MKV, AVI, and MPEG-TS streams</p>
       </header>
 
