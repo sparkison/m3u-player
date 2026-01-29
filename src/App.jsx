@@ -232,7 +232,8 @@ function PlayerDemo() {
 
       <footer className="demo-footer">
         <p>
-          Built with React, Shaka Player, and FFmpeg.wasm
+          GitHub |&nbsp;
+          <a href="https://github.com/sparkison/m3u-player" target="_blank" rel="noopener noreferrer">m3u-player</a>
         </p>
       </footer>
     </div>
