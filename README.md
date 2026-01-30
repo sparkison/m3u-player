@@ -4,9 +4,7 @@
 
 **Universal media player with FFmpeg remuxing and Shaka Player support (HLS, DASH, MP4, MKV, AVI, MPEG-TS).**
 
----
-
-## Features ✅
+## Features
 
 - Universal playback: HLS, DASH, MP4, WEBM, MPEG-TS
 - FFmpeg (WASM) remuxing for MKV/AVI to fragmented MP4 (fMP4)
