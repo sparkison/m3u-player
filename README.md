@@ -1,4 +1,4 @@
-# m3u-player
+# m3u player
 
 ![logo](./public/favicon.png)
 
