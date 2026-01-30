@@ -165,7 +165,7 @@ export default {
 Clone the repository and install dependencies:
 
 ```bash
-git clone <repo>
+git clone git@github.com:sparkison/m3u-player.git
 cd m3u-player
 npm install
 ```
